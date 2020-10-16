@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="title">Future Chat</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+    <div class="askName">
+      <testBalise>Salut</testBalise>
+      <p>Bonjour ! veuillez entrer un pseudo pour vous authentifier sur le tchat</p>
+      <form id="pseudoForm" action="">
+        <input id="pseudoField" type="text" name="pseudo" />
+        <input id='connButton' type="submit" value="connexion" />
+      </form>
+    </div>
+    <div class="app hidden">
+      <div id="menu">
+        <div id="logInfo">
+          <div id='profil'>
+            <span id="usrName"></span>
+        </div>
+        <span class='generalButton'>General</span>
+        <span id="connected_title">Utilisateurs connectés</span>
+        <div id="connected_container">
+          <ul id="connected_users">
+          </ul>
+        </div>
+        </div>
+      </div>
+      <div id="chatboxes_container">
+        <div class="chat_box">
+          <div class="text_container general">
+          </div>
+          <form class="chatForm">
+            <span class="writeAlert"></span>
+            <input id="msg" onkeyup="newEntry()" autocomplete="off" type="text" name="message" /><button id="submitInput" type="submit">Envoyer</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script src="js/site.js"></script>
+  </body>
+</html>

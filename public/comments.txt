@@ -1,0 +1,28 @@
+ //stopper l'envoi du form
+//securisation pseudo
+//demande de connexion d'un nouvel user
+//confirmaton de connexion
+//on masque la page de demande de pseudo et on affiche le chat
+//positionnement en bas de page
+//focus de l'input
+//securisation message
+//envoi d'un message
+//clear input
+//affichage d'erreur avec un alert
+//lorsque le serveur envoie un tableau avec tous les utilisateurs connectés
+
+//nettoyage de l'<ul> contenant les users connectés
+//pour chaques utilisateurs
+    users.forEach(user => {
+//si le pseudo(tab) correspondau pseudo entré par l'utilisateur
+        //alors on ajoute son pseudo dans la bulle de profil
+//sinon on ajoute le pseudo dans la liste des utilisateurs connectés
+//lorsqu'on recoit un message
+//si le message vient du serveur
+//alors on affiche le message en mode console
+// sinon si le message vient d'un user
+//si l'envoyeur du message est l'utilisateur en cours
+//on lui attribut la classe 'self'
+//sinon -> classe 'other'
+//affichage du message
+//positionnement de la page vers le bas
