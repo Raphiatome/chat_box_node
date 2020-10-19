@@ -16,48 +16,34 @@ app.get('/', (req, res) => { res.sendFile(__dirname + '/public/index.html'); });
 http.listen(port, () => { console.log(`Application FuturChat lancé sur http://localhost:${port}`); });
 //------------------------
 
-/**
- * Cette fonction permet de renvoyer un tableau avec les pseudos formaté en minuscule
- * @param {Array} users_tab 
- */
-function getNamesOf(users_tab)
+
+function get_id_by_name(name)
 {
-    let tab = new Array();
-    for(let i of users_tab) tab.push(i[0].toLowerCase());
-
-    return tab;
+    for (const user of users) {
+        if(user[0] == name) return user[1];
+    };
+    return false
 }
-
-
 
 let users = new Array(); 
 let is_writting = new Array();
 let message_log = new Array();
+let private_log = new Array();
 
 io.on('connection', (socket) => {
     socket.on('new_user', usr => {
-        if(!getNamesOf(users).includes(usr.toLowerCase()))
+        if(get_id_by_name(usr) == false)
         {
             users.push([usr, socket.id]);
-            io.emit('give_log', message_log);
+            socket.emit('give_log', message_log, 'general');
             io.emit('give_user', users);
             io.emit('new_message', 'Console', `${usr} s'est connecté !`, 'general');
             socket.emit('user_connected', usr, socket.id);
         } else {
             socket.emit('err', 'Ce pseudo existe déjà !')
         }
-        
     });
 
-    socket.on('private_msg', (sender, receiver) => {
-        users.forEach(user => {
-            if(user[0] == receiver)
-            {
-                io.to(user[1]).emit('private', sender);
-                socket.emit('private', receiver);
-            }
-        });
-    });
 
     socket.on('write_event', (pseudo, etat) => {
         if(etat == 1) is_writting.push(pseudo);
@@ -71,14 +57,36 @@ io.on('connection', (socket) => {
 
     
     socket.on('new_message', (usr, msg, channel) => {
-        console.log(channel)
-        io.emit('new_message', usr, msg, channel);
-        if(message_log.length == 20)
+        let receiverId = get_id_by_name(channel);
+
+        if(channel == 'general')
         {
-            message_log.splice(0, 1);
+            io.emit('new_message', usr, msg, 'general');
+            if(message_log.length == 20) message_log.splice(0, 1);
             message_log.push([usr, msg])
-        } else message_log.push([usr, msg]);
+        } else {
+            io.to(receiverId).emit('new_message', usr, msg, usr);
+            socket.emit('new_message', usr, msg, channel);
+            for (const conv of private_log) {
+                if(conv.includes(get_id_by_name(usr)) && conv.includes(get_id_by_name(channel)))
+                {
+                    if(private_log.length == 20) private_log.splice(0, 1);
+                    conv[2].push([usr, msg]); 
+                    
+                } 
+            }
+        }
+
+        
     });
+
+    socket.on('private_message', (sender, receiver) =>{
+        let receiverId = get_id_by_name(receiver);
+        let senderId = get_id_by_name(sender);
+        io.to(receiverId).emit('new_private', sender, `<div class='text_container ${sender} hidden'><span class='start_private'>Coversation privée avec ${sender}</span></div>`, 'receiver');
+        socket.emit('new_private', receiver, `<div class='text_container ${receiver} hidden'><span class='start_private'>Conversation privée avec ${receiver}</span></div>`, 'sender'); 
+        private_log.push([senderId, receiverId, []]);
+    }); 
 
     socket.on('disconnect', () => {
         for (user of users) {
@@ -88,7 +96,7 @@ io.on('connection', (socket) => {
                 is_writting.splice(index, 1);
                 index = users.indexOf(user);
                 users.splice(index, 1);
-                io.emit('new_message', 'Console', `${name} s'est déconnecté !`);
+                io.emit('new_message', 'Console', `${name} s'est déconnecté !`, 'general');
             }
         }
         io.emit('give_user', users);

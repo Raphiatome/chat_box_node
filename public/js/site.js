@@ -12,30 +12,46 @@ let connected_users = document.querySelectorAll('.conn_usr');
 let chat_container = document.querySelector('.chat_box')
 
 let current_page = 'general';
-let opened_pages = new Array();
+let opened_private = new Array();
 
 let pseudo;
 
-function getOpn(){console.log(opened_pages)}
+function close_last_page()
+{
+    for (let page of pages) {
+        if(!$(page).hasClass('hidden')) $(page).addClass('hidden');
+    }
+}
+
+
+function open_page(page_name)
+{  
+    for (let page of pages) {
+        if($(page).hasClass(page_name) && $(page).hasClass('hidden')) 
+        {
+            close_last_page();
+            $(page).removeClass('hidden');
+            current_page = page.classList[1];
+            console.log(`page ${page.classList[1]}`)
+        }
+    }
+}
 
 
 $('body').click(ev => {
     pages = document.querySelectorAll('.text_container');
+    if($(ev.target).hasClass('notif')) $(ev.target).removeClass('notif');
     if(ev.target.classList[0] == 'conn_usr')
     {
-        let receiver = ev.target.innerHTML;
-        if(!opened_pages.includes(receiver))
+        receiver = ev.target.innerHTML;
+        if(opened_private.includes(receiver))
         {
-            opened_pages.push(receiver)
-            socket.emit('private_msg', pseudo, receiver)
+            current_page = receiver;
+            open_page(receiver);
+        } else {
+            socket.emit('private_message', pseudo, receiver);
         }
-        else {
-            for (const field of pages) {
-                if(!$(field).hasClass('hidden')) console.log(field);
-                current_page = field.classList[1];
-            }
-            
-        }
+        
     }
     if(ev.target.classList[0] == 'generalButton')
     {
@@ -43,9 +59,11 @@ $('body').click(ev => {
         for (const field of pages) {
             if(!$(field).hasClass('hidden')) $(field).addClass('hidden');
         }
+        console.log('page general')
         $(document.querySelector('.text_container.general')).removeClass('hidden')
     }
 })
+
 
 
 
@@ -77,6 +95,7 @@ function sort_display_logs(toSort)
         } else sorted_logs.push([usr, [msg]])
     });
     
+    return sorted_logs;
 }
 
 
@@ -93,17 +112,16 @@ function connect_user(usr, id)
     msg.focus();
 
     $('.chatForm').submit(function(ev){
-        console.log(ev)
         ev.preventDefault();
         let msg = msgInput.value;
         //securisation message
-        if(msg != '' && msg != null && msg != ' ') 
+        if(msg != '' && msg != null && msg != ' ' || msg.length > 300) 
         {
 
             socket.emit('new_message', usr, msg, current_page);
             //clear input
             $('#msg').val('');
-        }
+        } else alert('La longueur de votre message doit se situer entre 0 et 2000')
     });   
 }
 
@@ -119,7 +137,7 @@ function get_users(users)
         if(user[0] == pseudo) profil_field.innerHTML = user[0];
 
         //sinon on ajoute le pseudo dans la liste des utilisateurs connectés
-        else connected_field.innerHTML += `<li class='conn_usr'>${user[0]}</li>`;
+        else connected_field.innerHTML += `<li class='conn_usr ${user[0]}'>${user[0]}</li>`;
     });
 }
 
@@ -148,17 +166,33 @@ function get_users_writing(users_writting)
     } else write_alert.innerHTML = '';
 }
 
+socket.on('give_log', (message_log, channel) => { 
+    console.log(message_log);
+    let sorted = sort_display_logs(message_log);
+    let page_to_give_log = document.querySelector(`.text_container.${channel}`);
+    sorted.forEach(log => {
+        let name = log[0];
+        let messages = log[1];
+        let log_string = '';
+        messages.forEach(message => {
+            log_string += `${message}<br/>`
+        });
 
+        if(name == pseudo) state = 'self';
+        else state = 'other';
+        page_to_give_log.innerHTML += `<div class='message_container ${state}'><span class='pseudo'>${name}</span><span class='message'>${log_string}</span></div>`;
+    });
+ })
+
+
+ let last_msg;
 function get_message(usr, msg, channel)
 {
-    let test = '.text_container.'+channel
     pages.forEach(page => {
         if($(page).hasClass(channel))
         {
-            console.log(page)
             if(usr == 'Console') 
             {   
-                console.log('zazou')
                 //alors on affiche le message en mode console
                 page.innerHTML += `<span class='console_message'>${msg}</span><br/>`
             }
@@ -175,8 +209,14 @@ function get_message(usr, msg, channel)
                     //sinon -> classe 'other'
                 } else sender = 'other';
                 //affichage du message
-                page.innerHTML += `<div class='message_container ${sender}'><span class='pseudo'>${usr}</span><span class='message'>${msg}</span></div>`;
+                page.innerHTML += `<div class='message_container ${sender} ${usr} ${channel}'><span class='pseudo'>${usr}</span><span class='message'>${msg}</span></div>`;
+                if(current_page != channel)
+                {
+                    $(document.querySelector(`.conn_usr.${channel}`)).addClass('notif');
+                }
             }
+            last_msg = document.querySelectorAll(`.message_container.${channel}`)
+            last_msg = last_msg[last_msg.length-1];
         }
     });
    
@@ -185,17 +225,6 @@ function get_message(usr, msg, channel)
     //positionnement de la page vers le bas
     window.scrollTo(0,document.body.scrollHeight);
 }
-
-socket.on('private', (usr) => {
-    for (const field of pages) {
-        if(!$(field).hasClass('hidden')) $(field).addClass('hidden');
-    }
-
-    current_page = usr;
-    chat_container.innerHTML += "<div class='text_container "+usr+"'>youpi</div>";
-
-});
-
 
 
 
@@ -231,6 +260,21 @@ socket.on('user_writting', (users_writting) => { get_users_writing(users_writtin
 //lorsqu'on recoit un message
 socket.on('new_message', (usr, msg, channel) => { get_message(usr, msg, channel); });
 
-socket.on('give_log', message_log => { sort_display_logs(message_log); })
+
+
+socket.on('new_private', (receiver, page, state) => {
+    if(!opened_private.includes(receiver))
+    {
+        opened_private.push(receiver);
+        chat_container.innerHTML += page;
+        pages = document.querySelectorAll('.text_container');;
+
+        if(state == 'sender')
+        {
+            open_page(receiver);
+        }
+    }
+    
+});
 
        

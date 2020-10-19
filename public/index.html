@@ -19,14 +19,16 @@
     </div>
     <div class="app hidden">
       <div id="menu">
+        <span class='generalButton'>General</span>
         <div id="logInfo">
           <div id='profil'>
             <span id="usrName"></span>
         </div>
-        <span class='generalButton'>General</span>
+        
         <span id="connected_title">Utilisateurs connectés</span>
         <div id="connected_container">
           <ul id="connected_users">
+            <li class="conn_usr">Raphi</li>
           </ul>
         </div>
         </div>
@@ -35,11 +37,11 @@
         <div class="chat_box">
           <div class="text_container general">
           </div>
-          <form class="chatForm">
-            <span class="writeAlert"></span>
-            <input id="msg" onkeyup="newEntry()" autocomplete="off" type="text" name="message" /><button id="submitInput" type="submit">Envoyer</button>
-          </form>
         </div>
+        <form class="chatForm">
+          <span class="writeAlert"></span>
+          <input id="msg" onkeyup="newEntry()" autocomplete="off" type="text" name="message" /><button id="submitInput" type="submit">Envoyer</button>
+        </form>
       </div>
     </div>
     <script src="js/site.js"></script>
