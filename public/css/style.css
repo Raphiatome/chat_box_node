@@ -208,7 +208,7 @@
       display: flex;
       flex-direction: column;
       margin-bottom: 35px;
-      margin-top: 10px;
+      margin-top: 20px;
       width: 60%;
       padding: 10px;
 
@@ -257,9 +257,6 @@
     margin-bottom: 10px;
   }
 
-  .message_container.self > .pseudo {
-    margin-right: 10px;
-  }
 
 .console_message {
     color: grey;
