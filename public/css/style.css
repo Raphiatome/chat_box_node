@@ -1,3 +1,8 @@
+@font-face {
+  font-family: quicksand;
+  src: url("../fonts/Quicksand-Medium.ttf");
+}
+
 *{
     margin: 0;
     padding: 0;
@@ -38,11 +43,10 @@
   }
 
   .conn_usr {
-    border-radius: 50px;
+    border-left: solid black 6px;
     padding: 10px 40px 10px 40px;
-    -webkit-box-shadow: 0px 0px 57px -15px rgba(0,0,0,0.78);
--moz-box-shadow: 0px 0px 57px -15px rgba(0,0,0,0.78);
-box-shadow: 0px 0px 57px -15px rgba(0,0,0,0.78);
+    background-color: rgb(255, 0, 0, 0.1);
+
     transition: 1s;
 
     font-weight: bold;
@@ -52,13 +56,12 @@ box-shadow: 0px 0px 57px -15px rgba(0,0,0,0.78);
 
   .conn_usr.notif {
     color: white;
-    background-color: red;
+    background-color: rgb(255, 0, 0, 0.6);
   }
 
   .conn_usr:hover {
-    -webkit-box-shadow: 0px 0px 72px 7px rgba(0,0,0,0.78);
--moz-box-shadow: 0px 0px 72px 7px rgba(0,0,0,0.78);
-box-shadow: 0px 0px 72px 7px rgba(0,0,0,0.78);
+    background-color: rgb(0, 0, 0);
+    color: white;
   }
 
   .chat_box {
@@ -94,7 +97,7 @@ box-shadow: 0px 0px 72px 7px rgba(0,0,0,0.78);
   .text_container {
     padding: 15px;
     list-style: none;
-    margin-bottom: 50px;
+    margin-bottom: 100px;
   }
 
   #msg {
@@ -202,11 +205,28 @@ box-shadow: 0px 0px 72px 7px rgba(0,0,0,0.78);
   }
 
   .text_container > .message_container {
-      border: solid black 1px;
       display: flex;
       flex-direction: column;
-      margin-bottom: 20px;
+      margin-bottom: 35px;
+      margin-top: 10px;
       width: 60%;
+      padding: 10px;
+
+
+  }
+
+  .message_container > .pseudo {
+    font-style: italic;
+    font-family: quicksand;
+    font-size: 15px;
+    font-weight: bold;
+    margin-top: -30px;
+    margin-bottom: 10px;
+  }
+
+  .message_container > .message {
+    font-family: quicksand;
+    font-size: 15px;
   }
 
   .notif {
@@ -224,32 +244,38 @@ box-shadow: 0px 0px 72px 7px rgba(0,0,0,0.78);
 
   .message_container.self {
       text-align: right;
-      background-color: aqua;
+      border-right: 5px solid black;
   }
 
   .message_container.other {
+    border-left: 5px solid black;
     text-align: left;
-    background-color: coral;
+    background-color: rgba(255,0,0,0.1);
 }
 
-  .message_container > .pseudo {
-      font-weight: bold;
+  .message_container.other > .pseudo {
+    margin-bottom: 10px;
+  }
+
+  .message_container.self > .pseudo {
+    margin-right: 10px;
   }
 
 .console_message {
     color: grey;
     font-style: italic;
+    margin-bottom: 20px;
 }
 
 .generalButton {
   position: absolute;
-  margin-left: 170px;
   font-family: 'Arial Black';
   cursor: pointer;
+  transition: 1s;
 }
 
 .generalButton:hover {
-  color: blue;
+  color: grey;
 }
 
 .hidden {display: none;}

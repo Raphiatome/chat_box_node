@@ -9,13 +9,17 @@ let connected_field = document.getElementById('connected_users');
 let profil_field = document.getElementById('usrName');
 let pages = document.querySelectorAll('.text_container');
 let connected_users = document.querySelectorAll('.conn_usr');
-let chat_container = document.querySelector('.chat_box')
+let chat_container = document.querySelector('.chat_box');
 
 let current_page = 'general';
 let opened_private = new Array();
 
 let pseudo;
 
+
+/**
+ * Permet de fermer la la page ouverte
+ */
 function close_last_page()
 {
     for (let page of pages) {
@@ -24,6 +28,10 @@ function close_last_page()
 }
 
 
+/**
+ * Permet de fermer la derniere page et d'en ouvrir une autre
+ * @param {String} page_name 
+ */
 function open_page(page_name)
 {  
     for (let page of pages) {
@@ -37,36 +45,40 @@ function open_page(page_name)
     }
 }
 
-
+//evenement de click
 $('body').click(ev => {
-    pages = document.querySelectorAll('.text_container');
+    //si on clique sur une conversation ayant une notification, on retire la notif de celle ci
     if($(ev.target).hasClass('notif')) $(ev.target).removeClass('notif');
+    //mise a jour de la liste des pages
+    pages = document.querySelectorAll('.text_container');
+    //si on clique sur un user connecté
     if(ev.target.classList[0] == 'conn_usr')
     {
+        //on recupere le pseudo de cet user
         receiver = ev.target.innerHTML;
+        //si la page pv de cet user existe
         if(opened_private.includes(receiver))
         {
+            //on l'ouvre
             current_page = receiver;
             open_page(receiver);
         } else {
+            //demande de nouvelle conversation privée
             socket.emit('private_message', pseudo, receiver);
         }
         
     }
+    //si on clique sur general
     if(ev.target.classList[0] == 'generalButton')
-    {
-        current_page = 'general';
-        for (const field of pages) {
-            if(!$(field).hasClass('hidden')) $(field).addClass('hidden');
-        }
-        console.log('page general')
-        $(document.querySelector('.text_container.general')).removeClass('hidden')
+    {   
+        //ouverture de general
+        open_page('general');
     }
 })
 
 
 
-
+//envoi du pseudo
 pseudoForm.addEventListener('submit', (ev) => {  
     //stopper l'envoi du form
     ev.preventDefault(true);        
@@ -80,6 +92,11 @@ pseudoForm.addEventListener('submit', (ev) => {
     }
 });
 
+/**
+ * Formate les logs recus par le serveur pour faciliter la lecture utilisateur
+ * @param {Array} toSort 
+ * @return {Array} contient les logs formatés
+ */
 function sort_display_logs(toSort)
 {
     let sorted_logs = new Array();
@@ -99,8 +116,14 @@ function sort_display_logs(toSort)
 }
 
 
+/**
+ * Apres reception de validation de connexion, affiche l'application
+ * @param {String} usr 
+ * @param {String} id 
+ */
 function connect_user(usr, id)
 {
+    //ajout du pseudo dans le cercle de profil
     document.getElementById('title').innerHTML = usr;
     //on masque la page de demande de pseudo et on affiche le chat
     $(pseudoDiv).addClass('hidden');
@@ -117,11 +140,11 @@ function connect_user(usr, id)
         //securisation message
         if(msg != '' && msg != null && msg != ' ' || msg.length > 300) 
         {
-
+            //envoi d'un nouveau message au serveur
             socket.emit('new_message', usr, msg, current_page);
             //clear input
             $('#msg').val('');
-        } else alert('La longueur de votre message doit se situer entre 0 et 2000')
+        } else alert('La longueur de votre message doit se situer entre 1 et 2000')
     });   
 }
 
@@ -141,21 +164,31 @@ function get_users(users)
     });
 }
 
+//on recupere le champ contenant les utilisateurs en train d'ecrire
 let write_alert = document.querySelector('.writeAlert');
 let str_users;
+
+//lorsqu'un user est en train d'ecrire (reception message serveur)
 function get_users_writing(users_writting)
 {
+    //efface le champ write_alert
     write_alert.innerHTML = '';
+    //si le champs est masqué, on l'affiche
     if($(write_alert).hasClass('hidden')) $(write_alert).removeClass('hidden');
-    users_writting.forEach(user => {
-        if(user == pseudo){
 
+    //pour chaques utilisateurs qui ecrivent
+    users_writting.forEach(user => {
+        //si un utilisateur a le meme pseudo que l'user actif
+        if(user == pseudo){
+            //on le retire de la liste (pas besoin que l'user sache qu'il est lui meme en train d'eçrire)
             const index = users_writting.indexOf(user)
             users_writting.splice(index, 1);
         }
     });
+    //si le tableau des user qui ecrivent n'est pas vide
     if(users_writting.length > 0)
     {
+        //ajout des users dans une string
         str_users = users_writting.toString();
         
         if(users_writting.length == 1) write_alert.innerHTML = `${str_users} est en train d'écrire...`;
@@ -166,10 +199,13 @@ function get_users_writing(users_writting)
     } else write_alert.innerHTML = '';
 }
 
-socket.on('give_log', (message_log, channel) => { 
-    console.log(message_log);
+// lorsque le serveur envoie des logs
+socket.on('give_log', (message_log, channel) => {   
+    //formattage des logs
     let sorted = sort_display_logs(message_log);
+    //selection du channel des logs 
     let page_to_give_log = document.querySelector(`.text_container.${channel}`);
+    //affichage des logs
     sorted.forEach(log => {
         let name = log[0];
         let messages = log[1];
@@ -185,12 +221,14 @@ socket.on('give_log', (message_log, channel) => {
  })
 
 
- let last_msg;
+//lorsque le serveur envoie un message
 function get_message(usr, msg, channel)
 {
     pages.forEach(page => {
+        //on selectionne la page qui correspond au channel du message
         if($(page).hasClass(channel))
         {
+            //si le message vient de la console
             if(usr == 'Console') 
             {   
                 //alors on affiche le message en mode console
@@ -199,6 +237,7 @@ function get_message(usr, msg, channel)
             // sinon si le message vient d'un user
             else 
             {
+                
                 let sender;
                 //si l'envoyeur du message est l'utilisateur en cours
                 if(usr == pseudo) 
@@ -208,19 +247,38 @@ function get_message(usr, msg, channel)
         
                     //sinon -> classe 'other'
                 } else sender = 'other';
-                //affichage du message
-                page.innerHTML += `<div class='message_container ${sender} ${usr} ${channel}'><span class='pseudo'>${usr}</span><span class='message'>${msg}</span></div>`;
+                
+                //si un message à déjà été envoyé avant
+                if(page.lastChild.firstChild != null )
+                {
+                    //on recupere l'auteur de ce message
+                    let pseudo_sender = page.lastChild.firstChild.innerHTML;
+                    //si l'auteur du message d'avant est le meme que l'auteur du nouveau message
+                    if(pseudo_sender == usr )
+                    {
+                        //on selectionne le dernier block de message
+                        let last_msg = page.lastChild;
+                        //on ajoute a ce dernier block de message, le nouveau message
+                        last_msg.lastChild.innerHTML += `<br />${msg}`;
+                      // sinon on ajoute un nouveau block de message en dessous  
+                    } else page.innerHTML += `<div class='message_container ${sender} ${usr} ${channel}'><span class='pseudo'>${usr}</span><span class='message'>${msg}</span></div>`;
+                } else page.innerHTML += `<div class='message_container ${sender} ${usr} ${channel}'><span class='pseudo'>${usr}</span><span class='message'>${msg}</span></div>`;
+                
+                //si ll'utilisateur recoit un message privé et qu'il n'est pas sur cette conversation
                 if(current_page != channel)
                 {
+                    //on lance une notification sur un utilisateur connecté
                     $(document.querySelector(`.conn_usr.${channel}`)).addClass('notif');
+                    //cration notification sonore
+                    let notif_sound = new Audio('../songs/swiftly-610.ogg');
+                    //lecture du son
+                    notif_sound.play();
                 }
             }
             last_msg = document.querySelectorAll(`.message_container.${channel}`)
             last_msg = last_msg[last_msg.length-1];
         }
     });
-   
-    //si le message vient du serveur
     
     //positionnement de la page vers le bas
     window.scrollTo(0,document.body.scrollHeight);
@@ -230,45 +288,53 @@ function get_message(usr, msg, channel)
 
 
 let cpt=0;
+/**
+ * Se declenche à chaque pression de touche si l'input de message est focus
+ * permet d'envoyer les états d'écriture des users
+ */
 function newEntry() 
 {
-    
+    //si l'input est vide
     if(msgInput.value == '' && cpt == 1)
     { 
+        //envoi d'un arret d'ecriture au serveur
         socket.emit('write_event', pseudo, 0);
         cpt--;
     }
+    //si l'input comporte des elementss
     if(msgInput.value.length > 0 && cpt == 0) 
     {
+        //envoi d'un debut d'ecriture au serveur
         socket.emit('write_event', pseudo, 1);
         cpt++;
     }
 }
 
-//confirmaton de connexion
 socket.on('user_connected', (usr, id) => { connect_user(usr, id)});
 
 //affichage d'erreur avec un alert
 socket.on('err', error_msg => { alert(error_msg); });
 
-//lorsque le serveur envoie un tableau avec tous les utilisateurs connectés
 socket.on('give_user', users => { get_users(users); });
-
 
 socket.on('user_writting', (users_writting) => { get_users_writing(users_writting); });
 
-//lorsqu'on recoit un message
 socket.on('new_message', (usr, msg, channel) => { get_message(usr, msg, channel); });
 
 
-
+//lorsque le serveur envoi une requete de creation de conversation privée
 socket.on('new_private', (receiver, page, state) => {
+    //si la conversation n'existe pas déjà
     if(!opened_private.includes(receiver))
     {
+        //ajout de la conversation dans la liste des conversations ouvertes
         opened_private.push(receiver);
+        //ajout de la conversation sur la page
         chat_container.innerHTML += page;
+        //mise à jour des pages
         pages = document.querySelectorAll('.text_container');;
 
+        //ouverture de la page pour celui qui a lancé la conversation
         if(state == 'sender')
         {
             open_page(receiver);
